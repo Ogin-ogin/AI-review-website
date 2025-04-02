@@ -6,27 +6,146 @@
 ## ディレクトリ構造
 ```
 project-root/
-├── frontend/                    # Next.js フロントエンド
-│   ├── pages/                   # ルーティング
-│   │   ├── index.js             # ホームページ
-│   │   ├── category/[id].js     # カテゴリページ
-│   │   ├── product/[id].js      # 製品詳細ページ
-│   │   └── compare/[ids].js     # 製品比較ページ
-│   ├── components/              # UIコンポーネント
-│   ├── lib/                     # ユーティリティ関数
-│   └── public/                  # 静的アセット
-├── functions/                   # Firebase Functions
-│   ├── data-collection/         # データ収集パイプライン
-│   │   ├── youtubeSearch.js     # YouTube API操作
-│   │   └── priceTracker.js      # 価格情報取得
-│   ├── data-analysis/           # データ分析モジュール
-│   │   ├── transcriptExtractor.js # 字幕抽出
-│   │   └── contentAnalyzer.js   # テキスト分析
-│   └── content-generation/      # コンテンツ生成エンジン
-│       ├── summarizer.js        # レビュー要約生成
-│       └── schemaGenerator.js   # 構造化データ生成
-└── workflows/                   # GitHub Actions
-    └── daily-update.yml         # 日次更新ワークフロー
+├── .github/                          # GitHub関連ファイル
+│   ├── ISSUE_TEMPLATE/               # イシューテンプレート
+│   │   ├── bug_report.md             # バグ報告テンプレート
+│   │   └── feature_request.md        # 機能リクエストテンプレート
+│   └── workflows/                    # GitHub Actions
+│       ├── daily-update.yml          # 日次更新ワークフロー
+│       ├── deploy-functions.yml      # Firebase Functions デプロイ
+│       └── deploy-frontend.yml       # フロントエンドデプロイ
+├── frontend/                         # Next.js フロントエンド
+│   ├── components/                   # UIコンポーネント
+│   │   ├── common/                   # 共通コンポーネント
+│   │   │   ├── Button.js             # ボタンコンポーネント
+│   │   │   ├── Card.js               # カードコンポーネント
+│   │   │   ├── Footer.js             # フッターコンポーネント
+│   │   │   ├── Header.js             # ヘッダーコンポーネント
+│   │   │   ├── Layout.js             # レイアウトコンポーネント
+│   │   │   ├── Loading.js            # ローディングインジケータ
+│   │   │   ├── Modal.js              # モーダルダイアログ
+│   │   │   └── SEO.js                # SEOメタデータコンポーネント
+│   │   ├── product/                  # 製品関連コンポーネント
+│   │   │   ├── ComparisonTable.js    # 製品比較テーブル
+│   │   │   ├── PriceHistory.js       # 価格履歴チャート
+│   │   │   ├── ProductCard.js        # 製品カード
+│   │   │   ├── ProductDetails.js     # 製品詳細
+│   │   │   ├── ProductFilter.js      # 製品フィルター
+│   │   │   ├── ProductGrid.js        # 製品グリッド表示
+│   │   │   ├── ProductReviews.js     # 製品レビュー概要 
+│   │   │   └── ReviewVideoCard.js    # レビュー動画カード
+│   │   └── home/                     # ホームページコンポーネント
+│   │       ├── CategorySection.js    # カテゴリセクション
+│   │       ├── FeaturedProducts.js   # 注目製品セクション
+│   │       └── HeroSection.js        # ヒーローセクション
+│   ├── contexts/                     # Reactコンテキスト
+│   │   ├── FilterContext.js          # フィルター状態管理
+│   │   └── ThemeContext.js           # テーマ状態管理
+│   ├── hooks/                        # カスタムReactフック
+│   │   ├── useFirestore.js           # Firestore操作フック
+│   │   ├── useLocalStorage.js        # ローカルストレージフック
+│   │   └── useProducts.js            # 製品データ取得フック
+│   ├── lib/                          # ユーティリティ関数
+│   │   ├── firebase.js               # Firebase設定・接続
+│   │   ├── formatters.js             # データフォーマット関数
+│   │   ├── gtag.js                   # Google Analytics
+│   │   └── schema.js                 # Schema.org JSON-LD生成
+│   ├── locales/                      # 多言語対応ファイル
+│   │   ├── en/                       # 英語
+│   │   │   └── common.json           # 共通翻訳
+│   │   └── ja/                       # 日本語
+│   │       └── common.json           # 共通翻訳
+│   ├── middleware/                   # ミドルウェア
+│   │   └── auth.js                   # 認証ミドルウェア（管理画面用）
+│   ├── pages/                        # ルーティング
+│   │   ├── _app.js                   # グローバルレイアウト 
+│   │   ├── _document.js              # HTMLドキュメント構造
+│   │   ├── api/                      # API ルート
+│   │   │   ├── revalidate.js         # ISR再検証エンドポイント
+│   │   │   └── sitemap.js            # 動的サイトマップ生成
+│   │   ├── admin/                    # 管理画面（非公開）
+│   │   │   ├── index.js              # 管理ダッシュボード
+│   │   │   └── products/             # 製品管理
+│   │   │       ├── [id].js           # 製品編集
+│   │   │       └── index.js          # 製品一覧
+│   │   ├── category/                 # カテゴリページ
+│   │   │   └── [id].js               # カテゴリ詳細ページ
+│   │   ├── compare/                  # 製品比較ページ
+│   │   │   └── [ids].js              # 製品比較ページ
+│   │   ├── index.js                  # ホームページ
+│   │   ├── privacy-policy.js         # プライバシーポリシー
+│   │   ├── product/                  # 製品詳細ページ
+│   │   │   └── [id].js               # 製品詳細ページ
+│   │   └── terms.js                  # 利用規約
+│   ├── public/                       # 静的アセット
+│   │   ├── favicon.ico               # ファビコン
+│   │   ├── images/                   # 画像ファイル
+│   │   ├── robots.txt                # ロボット制御ファイル
+│   │   └── sitemap.xml               # 静的サイトマップ
+│   ├── styles/                       # スタイル
+│   │   ├── globals.css               # グローバルスタイル
+│   │   └── theme.js                  # テーマ設定
+│   ├── .env.development              # 開発環境変数
+│   ├── .env.local.example            # 環境変数サンプル
+│   ├── .env.production               # 本番環境変数
+│   ├── next.config.js                # Next.js設定
+│   ├── package.json                  # 依存関係・スクリプト
+│   └── tailwind.config.js            # Tailwind CSS設定
+├── functions/                        # Firebase Functions
+│   ├── api/                          # API関数
+│   │   ├── products.js               # 製品API
+│   │   └── webhooks.js               # Webhookエンドポイント
+│   ├── auth/                         # 認証関連処理
+│   │   └── admin.js                  # 管理者認証
+│   ├── data-analysis/                # データ分析モジュール
+│   │   ├── contentAnalyzer.js        # テキスト分析
+│   │   ├── models/                   # 分析モデル
+│   │   │   ├── sentimentModel.js     # 感情分析モデル
+│   │   │   └── topicModel.js         # トピック抽出モデル
+│   │   ├── sentiment.js              # 感情分析ロジック
+│   │   └── transcriptExtractor.js    # 字幕抽出
+│   ├── data-collection/              # データ収集パイプライン
+│   │   ├── priceTracker.js           # 価格情報取得
+│   │   └── youtubeSearch.js          # YouTube API操作
+│   ├── content-generation/           # コンテンツ生成エンジン
+│   │   ├── schemaGenerator.js        # 構造化データ生成
+│   │   └── summarizer.js             # レビュー要約生成
+│   ├── scheduler/                    # スケジューラー
+│   │   ├── daily.js                  # 日次タスク
+│   │   └── hourly.js                 # 時間毎タスク
+│   ├── utils/                        # ユーティリティ
+│   │   ├── db.js                     # データベースヘルパー
+│   │   ├── http.js                   # HTTPリクエストヘルパー
+│   │   └── logger.js                 # ロギング機能
+│   ├── .env.example                  # 環境変数サンプル
+│   ├── index.js                      # Functions エントリーポイント
+│   └── package.json                  # 依存関係・スクリプト
+├── models/                           # AIモデル定義
+│   ├── sentiment/                    # 感情分析モデル
+│   └── topic/                        # トピック抽出モデル
+├── scripts/                          # ユーティリティスクリプト
+│   ├── export-data.js                # データエクスポート
+│   ├── import-products.js            # 製品データインポート
+│   └── seed-database.js              # テストデータ作成
+├── tests/                            # テスト
+│   ├── e2e/                          # E2Eテスト
+│   │   └── cypress/                  # Cypressテスト
+│   ├── frontend/                     # フロントエンドテスト
+│   │   └── components/               # コンポーネントテスト
+│   └── functions/                    # Functions テスト
+│       └── api/                      # APIテスト
+├── .env.local                        # ローカル環境変数
+├── .firebaserc                       # Firebase プロジェクト設定
+├── .gitignore                        # Git 除外ファイル
+├── CONTRIBUTING.md                   # 貢献ガイドライン
+├── firebase.json                     # Firebase 設定
+├── firestore.indexes.json            # Firestore インデックス設定
+├── firestore.rules                   # Firestore セキュリティルール
+├── jest.config.js                    # Jest テスト設定
+├── LICENSE                           # ライセンス情報
+├── package.json                      # プロジェクト情報・依存関係
+├── README.md                         # プロジェクト概要
+└── vercel.json                       # Vercel デプロイ設定
 ```
 
 ## 主要プロセスフロー
