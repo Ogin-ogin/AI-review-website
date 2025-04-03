@@ -1,0 +1,53 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "frontend/next.config.js",
+        "use": "@vercel/next"
+      },
+      {
+        "src": "functions/**/*.js",
+        "use": "@vercel/node"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "/functions/api/$1"
+      },
+      {
+        "src": "/(.*)",
+        "dest": "frontend/$1"
+      }
+    ],
+    "env": {
+      "NEXT_PUBLIC_FIREBASE_API_KEY": "@firebase_api_key",
+      "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN": "@firebase_auth_domain",
+      "NEXT_PUBLIC_FIREBASE_PROJECT_ID": "@firebase_project_id",
+      "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET": "@firebase_storage_bucket",
+      "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "@firebase_messaging_sender_id",
+      "NEXT_PUBLIC_FIREBASE_APP_ID": "@firebase_app_id",
+      "NEXT_PUBLIC_GA_TRACKING_ID": "@ga_tracking_id"
+    },
+    "functions": {
+      "memory": 256,
+      "maxDuration": 10
+    },
+    "rewrites": [
+      {
+        "source": "/api/:path*",
+        "destination": "/functions/api/:path*"
+      }
+    ],
+    "headers": [
+      {
+        "source": "/(.*)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=0, must-revalidate"
+          }
+        ]
+      }
+    ]
+  }

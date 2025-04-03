@@ -1,0 +1,17 @@
+{
+    "welcome": "ようこそ",
+    "product": {
+      "title": "製品",
+      "description": "説明",
+      "price": "価格",
+      "category": "カテゴリ",
+      "reviews": "レビュー"
+    },
+    "filter": {
+      "apply": "フィルターを適用",
+      "reset": "リセット"
+    },
+    "footer": {
+      "copyright": "すべての権利を保有"
+    }
+  }

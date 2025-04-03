@@ -1,0 +1,17 @@
+{
+    "welcome": "Welcome",
+    "product": {
+      "title": "Product",
+      "description": "Description",
+      "price": "Price",
+      "category": "Category",
+      "reviews": "Reviews"
+    },
+    "filter": {
+      "apply": "Apply Filter",
+      "reset": "Reset"
+    },
+    "footer": {
+      "copyright": "All rights reserved"
+    }
+  }

@@ -1,841 +1,402 @@
-# AIレビュー動画分析サイト - フロントエンド開発ガイド
+AIレビュー動画分析サイト - フロントエンド開発ガイド
+目的
+このガイドは、AIレビュー動画分析サイトのフロントエンド開発に関する標準と規約を定義し、開発チームが一貫性のあるユーザーインターフェースを構築するための指針を提供します。
+目次
 
-## 目次
+アーキテクチャ概要
+コンポーネント構成と責務
+状態管理戦略
+ルーティング設計
+スタイリング規約
+パフォーマンス最適化
+多言語対応
+テスト戦略
+開発ワークフロー
 
-1. [概要](#概要)
-2. [技術スタック](#技術スタック)
-3. [プロジェクト構成](#プロジェクト構成)
-4. [コンポーネント設計](#コンポーネント設計)
-5. [状態管理](#状態管理)
-6. [ルーティング設計](#ルーティング設計)
-7. [スタイリング規約](#スタイリング規約)
-8. [パフォーマンス最適化](#パフォーマンス最適化)
-9. [国際化対応](#国際化対応)
-10. [テスト戦略](#テスト戦略)
-11. [デプロイフロー](#デプロイフロー)
-12. [SEO対策](#seo対策)
+アーキテクチャ概要
+AIレビュー動画分析サイトのフロントエンドは、Next.js をベースとしたモダンな React アプリケーションとして構築されています。
 
-## 概要
+フレームワーク: Next.js（静的生成重視）
+静的生成: 可能な限り SSG (Static Site Generation) を活用
+デプロイ: Vercel（無料枠を最大活用）
+スタイリング: Tailwind CSS + カスタムテーマ
+データフェッチ: SWR を使用した効率的な取得と更新
 
-このドキュメントは、AIレビュー動画分析サイトのフロントエンド開発に関するガイドラインを提供します。フロントエンドは Next.js を使用し、静的サイト生成（SSG）を主体としたアーキテクチャで構築されています。このアプローチにより、高速なページ読み込み、SEO最適化、および Firebase の無料枠内でのリソース効率化を実現します。
+コンポーネント構成と責務
+コンポーネント階層
+フロントエンドのコンポーネントは以下の階層に分類されます：
 
-### 開発目標
+ページコンポーネント (/pages ディレクトリ) - ルーティングとレイアウト管理
+テンプレートコンポーネント - 複数ページで再利用される構造
+機能コンポーネント - 製品リスト、比較表などの機能的なUI要素
+共通コンポーネント - ボタン、カードなどの基本UI要素
 
-- **高速で応答性の高いUI**: ユーザー体験を最優先
-- **SEO最適化された構造**: 検索エンジンからの流入を最大化
-- **スケーラブルな設計**: 新カテゴリや機能の追加が容易
-- **コスト効率**: 無料枠内でのリソース活用
+責務の分離
+各コンポーネントの責務を明確に分離します：
 
-## 技術スタック
+ページコンポーネント: データ取得とレイアウト構成のみを担当
+テンプレートコンポーネント: 構造とレイアウトのみを提供
+機能コンポーネント: ビジネスロジックとデータ処理を実装
+共通コンポーネント: プレゼンテーションのみに集中、状態を持たない
 
-- **フレームワーク**: Next.js 14.x
-- **言語**: TypeScript 5.x
-- **スタイリング**: Tailwind CSS 3.x
-- **状態管理**: React Context API + SWR
-- **UIコンポーネント**: 自作コンポーネント + Headless UI
-- **フォーム**: React Hook Form
-- **バリデーション**: Zod
-- **テスト**: Jest + React Testing Library
-- **E2Eテスト**: Cypress
-- **国際化**: next-i18next
-- **分析**: Google Analytics 4
+コンポーネント設計原則
 
-## プロジェクト構成
+単一責任の原則: 各コンポーネントは明確な役割を持つ
+コンポジション優先: 継承より構成を活用
+プロップドリルを回避: Context API や Custom Hooks で状態管理
+最小限の依存関係: 外部依存を最小限に抑える
 
-```
-frontend/
-├── components/                   # UIコンポーネント
-│   ├── common/                   # 共通コンポーネント
-│   ├── product/                  # 製品関連コンポーネント
-│   └── home/                     # ホームページコンポーネント
-├── contexts/                     # Reactコンテキスト
-├── hooks/                        # カスタムReactフック
-├── lib/                          # ユーティリティ関数
-├── locales/                      # 多言語対応ファイル
-├── middleware/                   # ミドルウェア
-├── pages/                        # ルーティング
-├── public/                       # 静的アセット
-└── styles/                       # スタイル
-```
+状態管理戦略
+ローカル状態
 
-### ディレクトリ構造の原則
+単一コンポーネント内の状態には useState を使用
+複雑な状態遷移には useReducer を使用
 
-- **機能別モジュール化**: 関連するコンポーネントとロジックをグループ化
-- **共通コンポーネントの分離**: 再利用可能なコンポーネントを明確に区分
-- **ページとコンポーネントの分離**: Next.js のルーティング機能に合わせた構造
+グローバル状態
 
-## コンポーネント設計
+テーマ、フィルター、UIモードなどのアプリケーション全体の状態は Context API で管理
+主要なコンテキスト:
 
-### コンポーネント階層
+ThemeContext - ダークモード/ライトモード管理
+FilterContext - 製品フィルタリング状態管理
+CompareContext - 比較対象製品管理
 
-1. **ページコンポーネント**: `/pages` ディレクトリ内の各ページ
-2. **レイアウトコンポーネント**: ページ構造を定義（Header, Footer, Layout）
-3. **機能コンポーネント**: 特定の機能を提供（ProductGrid, FilterPanel）
-4. **共通コンポーネント**: 再利用可能な UI 要素（Button, Card, Modal）
 
-### コンポーネント設計原則
 
-- **単一責任の原則**: 各コンポーネントは明確な単一の責任を持つ
-- **プロップドリリングの最小化**: Context API を適切に活用
-- **Container/Presentational パターン**: ロジックと表示の分離
-- **Composition over Props**: 柔軟な構成のために子コンポーネントを使用
+リモートデータ状態
 
-### コンポーネント例
+SWR を使用してFirestore データのフェッチと同期
+カスタムフックによるデータアクセス抽象化:
 
-```typescript
-// components/product/ProductCard.tsx
-import { FC } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { formatPrice } from '@/lib/formatters';
-import { Product } from '@/types';
+useProducts - 製品データの取得と操作
+useCategory - カテゴリデータの取得と操作
+useComparisons - 比較機能の状態管理
 
-interface ProductCardProps {
-  product: Product;
-  showReviewCount?: boolean;
-}
 
-export const ProductCard: FC<ProductCardProps> = ({ 
-  product, 
-  showReviewCount = true 
-}) => {
-  return (
-    <div className="rounded-lg shadow-md overflow-hidden transition-all hover:shadow-lg">
-      <Link href={`/product/${product.id}`}>
-        <a className="block">
-          <div className="relative h-48">
-            <Image 
-              src={product.images[0] || '/images/placeholder.png'} 
-              alt={product.name}
-              layout="fill"
-              objectFit="cover"
-            />
-          </div>
-          <div className="p-4">
-            <h3 className="font-medium text-gray-900">{product.name}</h3>
-            <div className="mt-1 flex justify-between items-center">
-              <p className="text-lg font-bold text-indigo-600">
-                {formatPrice(product.prices[0]?.price)}
-              </p>
-              {showReviewCount && (
-                <span className="text-sm text-gray-500">
-                  {product.videos.length} レビュー
-                </span>
-              )}
-            </div>
-          </div>
-        </a>
-      </Link>
-    </div>
-  );
-};
-```
 
-## 状態管理
+状態管理パターン
+javascriptコピー// FilterContextの例
+import { createContext, useContext, useReducer } from 'react';
 
-### 状態管理戦略
+const FilterContext = createContext();
 
-フロントエンドの状態管理は、目的に応じて複数のアプローチを組み合わせます：
-
-1. **ローカルコンポーネント状態**: コンポーネント固有の UI 状態（`useState`）
-2. **グローバルアプリケーション状態**: Context API を使用
-3. **サーバーデータ状態**: SWR を使用したデータフェッチングと管理
-4. **URL 状態**: クエリパラメータを使用した状態の永続化
-
-### Context API の使用例
-
-```typescript
-// contexts/FilterContext.tsx
-import { createContext, useContext, useState, FC, ReactNode } from 'react';
-
-interface FilterState {
-  category: string | null;
-  priceRange: [number, number] | null;
-  rating: number | null;
-  sortBy: 'popularity' | 'price_asc' | 'price_desc' | 'rating';
-}
-
-interface FilterContextType {
-  filters: FilterState;
-  setFilter: (key: keyof FilterState, value: any) => void;
-  resetFilters: () => void;
-}
-
-const initialState: FilterState = {
-  category: null,
-  priceRange: null,
-  rating: null,
-  sortBy: 'popularity'
+const filterReducer = (state, action) => {
+  switch (action.type) {
+    case 'SET_CATEGORY':
+      return { ...state, category: action.payload };
+    case 'SET_PRICE_RANGE':
+      return { ...state, priceRange: action.payload };
+    case 'RESET_FILTERS':
+      return { ...initialState };
+    default:
+      return state;
+  }
 };
 
-const FilterContext = createContext<FilterContextType | undefined>(undefined);
+const initialState = {
+  category: 'all',
+  priceRange: [0, 100000],
+  sortBy: 'relevance',
+  ratings: 0,
+};
 
-export const FilterProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const [filters, setFilters] = useState<FilterState>(initialState);
-  
-  const setFilter = (key: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  };
-  
-  const resetFilters = () => {
-    setFilters(initialState);
-  };
+export const FilterProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(filterReducer, initialState);
   
   return (
-    <FilterContext.Provider value={{ filters, setFilter, resetFilters }}>
+    <FilterContext.Provider value={{ state, dispatch }}>
       {children}
     </FilterContext.Provider>
   );
 };
 
-export const useFilter = () => {
-  const context = useContext(FilterContext);
-  if (context === undefined) {
-    throw new Error('useFilter must be used within a FilterProvider');
-  }
-  return context;
-};
-```
+export const useFilter = () => useContext(FilterContext);
+ルーティング設計
+ページ構造
 
-### SWR によるデータフェッチング
+/ - ホームページ
+/category/[id] - カテゴリ別製品一覧
+/product/[id] - 製品詳細ページ
+/compare/[ids] - 製品比較ページ
+/admin/... - 管理機能（認証保護）
+/privacy-policy - プライバシーポリシー
+/terms - 利用規約
 
-```typescript
-// hooks/useProducts.ts
-import useSWR from 'swr';
-import { Product } from '@/types';
-
-const fetcher = (url: string) => fetch(url).then(res => res.json());
-
-export function useProducts(category?: string) {
-  const url = category 
-    ? `/api/products?category=${encodeURIComponent(category)}` 
-    : '/api/products';
-    
-  const { data, error, isLoading } = useSWR<{ products: Product[] }>(
-    url, 
-    fetcher
-  );
+動的ルーティング
+Next.js の動的ルートとgetStaticProps/getStaticPaths を使用して、ビルド時に静的ページを生成します：
+javascriptコピー// /pages/product/[id].js
+export async function getStaticPaths() {
+  const products = await fetchAllProductIds();
   
   return {
-    products: data?.products || [],
-    isLoading,
-    isError: error
+    paths: products.map(product => ({ params: { id: product.id } })),
+    fallback: 'blocking' // 新製品の場合はサーバーで生成
   };
 }
-```
 
-### ローカルストレージを活用した状態永続化
-
-```typescript
-// hooks/useLocalStorage.ts
-import { useState, useEffect } from 'react';
-
-export function useLocalStorage<T>(key: string, initialValue: T) {
-  const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === 'undefined') {
-      return initialValue;
-    }
-    
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.error(error);
-      return initialValue;
-    }
-  });
+export async function getStaticProps({ params }) {
+  const product = await fetchProductDetails(params.id);
   
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem(key, JSON.stringify(storedValue));
-    }
-  }, [key, storedValue]);
-  
-  return [storedValue, setStoredValue] as const;
+  return {
+    props: { product },
+    revalidate: 86400, // 24時間ごとに再検証
+  };
 }
-```
+プログラマティックナビゲーション
+javascriptコピーimport { useRouter } from 'next/router';
 
-## ルーティング設計
-
-Next.js のファイルベースのルーティングシステムを活用し、以下のルートを実装します：
-
-### 主要ルート
-
-- `/` - ホームページ
-- `/category/[id]` - カテゴリページ
-- `/product/[id]` - 製品詳細ページ
-- `/compare/[ids]` - 製品比較ページ
-- `/admin/*` - 管理者ページ（保護されたルート）
-
-### ダイナミックルーティング戦略
-
-- **SEO に最適化したスラッグ**: `[id]` の代わりに `[slug]` を使用する選択肢あり
-- **複合パラメータ**: 複数の製品比較では `compare/product1-vs-product2-vs-product3` のような形式を使用
-
-### API ルート
-
-- `/api/products` - 製品リスト取得
-- `/api/products/[id]` - 製品詳細取得
-- `/api/revalidate` - ISR 再検証トリガー（管理者認証必須）
-- `/api/sitemap` - 動的サイトマップ生成
-
-### 管理者ルート保護
-
-```typescript
-// middleware/auth.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-
-export async function middleware(req: NextRequest) {
-  const session = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+const ProductCard = ({ product }) => {
+  const router = useRouter();
   
-  // /admin/* へのアクセスを保護
-  if (req.nextUrl.pathname.startsWith('/admin')) {
-    if (!session || session.role !== 'admin') {
-      const url = new URL('/api/auth/signin', req.url);
-      url.searchParams.set('callbackUrl', req.url);
-      return NextResponse.redirect(url);
-    }
-  }
+  const handleClick = () => {
+    router.push(`/product/${product.id}`);
+  };
   
-  return NextResponse.next();
-}
-
-export const config = {
-  matcher: ['/admin/:path*']
+  return <div onClick={handleClick}>...</div>;
 };
-```
+スタイリング規約
+Tailwind CSS 活用
 
-## スタイリング規約
+Tailwind CSS をベースにしたユーティリティファースト設計
+カスタムテーマによるブランドカラーの統一
+メディアクエリはTailwindのブレークポイントに準拠
 
-### Tailwind CSS 設計原則
-
-- **ユーティリティファースト**: 可能な限り Tailwind のユーティリティクラスを直接使用
-- **コンポーネント抽出**: 繰り返し使用されるパターンには専用コンポーネントを作成
-- **テーマ変数**: デザイントークンとして Tailwind のテーマ設定を活用
-
-### テーマ設定
-
-```typescript
-// tailwind.config.js
+テーマ設計
+javascriptコピー// tailwind.config.js
 module.exports = {
-  content: [
-    './pages/**/*.{js,ts,jsx,tsx}',
-    './components/**/*.{js,ts,jsx,tsx}'
-  ],
   theme: {
     extend: {
       colors: {
         primary: {
           50: '#f0f9ff',
           100: '#e0f2fe',
-          // ... 他の色調
-          900: '#0c4a6e',
+          // ...以下略
         },
-        // 他のブランドカラー
+        secondary: {
+          // ...カラーバリエーション
+        },
+        // その他のブランドカラー
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Montserrat', 'system-ui', 'sans-serif']
-      },
-      borderRadius: {
-        'card': '0.5rem'
+        sans: ['Noto Sans JP', 'sans-serif'],
+        heading: ['Montserrat', 'sans-serif'],
       },
       // その他のカスタム設定
-    }
+    },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/aspect-ratio')
-  ]
+  // ...その他の設定
 };
-```
-
-### コンポーネントクラス構造
-
-```typescript
-// components/common/Button.tsx
-import { FC, ButtonHTMLAttributes } from 'react';
-import classNames from 'classnames';
-
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline';
-  size?: 'sm' | 'md' | 'lg';
-  isLoading?: boolean;
-}
-
-export const Button: FC<ButtonProps> = ({
-  children,
-  variant = 'primary',
-  size = 'md',
-  isLoading = false,
-  className,
-  disabled,
-  ...props
-}) => {
-  const baseClasses = 'font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2';
+コンポーネントスタイリング
+共通コンポーネントはTailwindを使用し、再利用可能なスタイルを定義：
+javascriptコピー// components/common/Button.js
+const Button = ({ children, variant = 'primary', size = 'md', ...props }) => {
+  const baseClasses = 'rounded font-medium transition-colors focus:outline-none focus:ring-2';
   
-  const variantClasses = {
-    primary: 'bg-primary-600 hover:bg-primary-700 text-white focus:ring-primary-500',
-    secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-gray-500',
-    outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-primary-500'
+  const variants = {
+    primary: 'bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500',
+    secondary: 'bg-secondary-600 text-white hover:bg-secondary-700 focus:ring-secondary-500',
+    outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-primary-500',
   };
   
-  const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-6 py-3 text-lg'
+  const sizes = {
+    sm: 'py-1 px-3 text-sm',
+    md: 'py-2 px-4 text-base',
+    lg: 'py-3 px-6 text-lg',
   };
   
-  const isDisabled = disabled || isLoading;
+  const classes = `${baseClasses} ${variants[variant]} ${sizes[size]}`;
   
   return (
-    <button
-      className={classNames(
-        baseClasses,
-        variantClasses[variant],
-        sizeClasses[size],
-        isDisabled && 'opacity-60 cursor-not-allowed',
-        className
-      )}
-      disabled={isDisabled}
-      {...props}
-    >
-      {isLoading ? (
-        <span className="flex items-center">
-          <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          処理中...
-        </span>
-      ) : children}
+    <button className={classes} {...props}>
+      {children}
     </button>
   );
 };
-```
 
-### モバイルファースト原則
+export default Button;
+パフォーマンス最適化
+画像最適化
 
-- 常にモバイルファーストでデザイン、レスポンシブブレークポイントは拡大方向に設定
-- Tailwind のブレークポイント: `sm`(640px)、`md`(768px)、`lg`(1024px)、`xl`(1280px)、`2xl`(1536px)
+Next.js の Image コンポーネントを使用した自動最適化
+レスポンシブ画像とLazy Loading の実装
 
-## パフォーマンス最適化
+javascriptコピーimport Image from 'next/image';
 
-### 画像最適化
-
-- Next.js の `Image` コンポーネントを使用
-- 適切なサイズ、フォーマット（WebP/AVIF）、遅延読み込みの活用
-
-```typescript
-// components/product/ProductImage.tsx
-import { FC } from 'react';
-import Image from 'next/image';
-
-interface ProductImageProps {
-  src: string;
-  alt: string;
-  priority?: boolean;
-}
-
-export const ProductImage: FC<ProductImageProps> = ({ src, alt, priority = false }) => {
+const ProductImage = ({ product }) => {
   return (
-    <div className="relative aspect-w-4 aspect-h-3">
+    <div className="relative w-full aspect-square">
       <Image
-        src={src}
-        alt={alt}
+        src={product.imageUrl}
+        alt={product.name}
         layout="fill"
         objectFit="cover"
-        className="rounded-md"
-        priority={priority}
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+        priority={false}
+        placeholder="blur"
+        blurDataURL="data:image/png;base64,..."
       />
     </div>
   );
 };
-```
+コード分割とバンドル最適化
 
-### コンポーネント分割と動的インポート
+動的インポートによるコンポーネントの遅延ロード
+大きなライブラリの選択的インポート
 
-```typescript
-// 大きなコンポーネントの動的読み込み
-import dynamic from 'next/dynamic';
+javascriptコピーimport dynamic from 'next/dynamic';
 
-const ProductComparisonTable = dynamic(
-  () => import('@/components/product/ComparisonTable'),
-  { 
-    loading: () => <p>比較表を読み込み中...</p>,
-    ssr: false // クライアントサイドのみでレンダリング
-  }
+// 大きな比較テーブルコンポーネントを遅延ロード
+const ComparisonTable = dynamic(
+  () => import('../components/product/ComparisonTable'),
+  { loading: () => <p>Loading comparison table...</p> }
 );
-```
+データフェッチの最適化
 
-### バンドルサイズ最適化
+SWR を使用したキャッシュと再検証
+適切なキャッシュ制御ヘッダー設定
 
-- `next-bundle-analyzer` を使用したバンドル分析
-- 大きな依存関係は動的インポート
-- ツリーシェイキングを考慮したインポート
+javascriptコピーimport useSWR from 'swr';
 
-```javascript
-// 良い例: 特定の関数のみをインポート
-import { formatPrice } from '@/lib/formatters';
+const fetcher = (url) => fetch(url).then((res) => res.json());
 
-// 避けるべき例: モジュール全体をインポート
-import * as formatters from '@/lib/formatters';
-```
+function useProductData(productId) {
+  const { data, error } = useSWR(`/api/products/${productId}`, fetcher, {
+    revalidateOnFocus: false,
+    revalidateOnMount: true,
+    revalidateOnReconnect: false,
+    refreshWhenOffline: false,
+    refreshWhenHidden: false,
+    refreshInterval: 0,
+  });
 
-## 国際化対応
+  return {
+    product: data,
+    isLoading: !error && !data,
+    isError: error,
+  };
+}
+多言語対応
+next-i18next の活用
 
-### next-i18next の設定
+日本語と英語の両方に対応
+翻訳ファイルはJSON形式で管理
 
-```typescript
-// next-i18next.config.js
-module.exports = {
-  i18n: {
-    defaultLocale: 'ja',
-    locales: ['ja', 'en'],
-    localePath: './locales'
+javascriptコピー// /locales/ja/common.json
+{
+  "nav": {
+    "home": "ホーム",
+    "categories": "カテゴリ",
+    "compare": "比較",
+    "search": "検索"
   },
-  reloadOnPrerender: process.env.NODE_ENV === 'development'
-};
-```
+  // 他の翻訳キー
+}
+翻訳の使用法
+javascriptコピーimport { useTranslation } from 'next-i18next';
 
-### 翻訳ファイルの構造
-
-```
-locales/
-├── en/
-│   ├── common.json
-│   ├── product.json
-│   └── home.json
-└── ja/
-    ├── common.json
-    ├── product.json
-    └── home.json
-```
-
-### 翻訳の使用方法
-
-```typescript
-// コンポーネントでの使用例
-import { useTranslation } from 'next-i18next';
-
-export const ProductDetails = ({ product }) => {
-  const { t } = useTranslation('product');
+const Header = () => {
+  const { t } = useTranslation('common');
   
   return (
-    <div>
-      <h1>{product.name}</h1>
-      <div className="mt-4">
-        <h2>{t('specs.title')}</h2>
-        {/* ... */}
-      </div>
-    </div>
+    <nav>
+      <ul>
+        <li>{t('nav.home')}</li>
+        <li>{t('nav.categories')}</li>
+        <li>{t('nav.compare')}</li>
+        <li>{t('nav.search')}</li>
+      </ul>
+    </nav>
   );
 };
+テスト戦略
+単体テスト
 
-// ページでのサーバーサイド設定
-export const getStaticProps = async ({ locale }) => {
-  return {
-    props: {
-      ...(await serverSideTranslations(locale, ['common', 'product'])),
-      // その他のprops
-    }
-  };
-};
-```
+Jest と React Testing Library を使用
+コンポーネントの機能とレンダリングをテスト
 
-## テスト戦略
-
-### ユニットテスト (Jest + React Testing Library)
-
-```typescript
-// components/common/Button.test.tsx
+javascriptコピー// components/common/Button.test.js
 import { render, screen, fireEvent } from '@testing-library/react';
-import { Button } from './Button';
+import Button from './Button';
 
 describe('Button component', () => {
-  test('renders button with text', () => {
-    render(<Button>クリック</Button>);
-    expect(screen.getByText('クリック')).toBeInTheDocument();
+  test('renders with children', () => {
+    render(<Button>Click me</Button>);
+    expect(screen.getByText('Click me')).toBeInTheDocument();
   });
   
-  test('calls onClick when clicked', () => {
-    const handleClick = jest.fn();
-    render(<Button onClick={handleClick}>クリック</Button>);
-    fireEvent.click(screen.getByText('クリック'));
-    expect(handleClick).toHaveBeenCalledTimes(1);
+  test('calls onClick handler when clicked', () => {
+    const mockOnClick = jest.fn();
+    render(<Button onClick={mockOnClick}>Click me</Button>);
+    fireEvent.click(screen.getByText('Click me'));
+    expect(mockOnClick).toHaveBeenCalledTimes(1);
   });
   
-  test('shows loading state', () => {
-    render(<Button isLoading>クリック</Button>);
-    expect(screen.getByText('処理中...')).toBeInTheDocument();
-  });
+  // その他のテスト
 });
-```
+E2Eテスト
 
-### インテグレーションテスト
+Cypress を使用した重要ユーザーフローのテスト
+主要なユーザーストーリーをカバー
 
-```typescript
-// tests/integration/productListing.test.tsx
-import { render, screen, waitFor } from '@testing-library/react';
-import { ProductGrid } from '@/components/product/ProductGrid';
-import { FilterProvider } from '@/contexts/FilterContext';
-import { SWRConfig } from 'swr';
-
-// APIレスポンスのモック
-const mockProducts = [/* ... */];
-
-// fetchのモック
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    json: () => Promise.resolve({ products: mockProducts }),
-  })
-);
-
-describe('Product listing with filters', () => {
-  test('renders products and allows filtering', async () => {
-    render(
-      <SWRConfig value={{ dedupingInterval: 0 }}>
-        <FilterProvider>
-          <ProductGrid category="cameras" />
-        </FilterProvider>
-      </SWRConfig>
-    );
-    
-    // 製品が表示されるのを待つ
-    await waitFor(() => {
-      expect(screen.getByText(mockProducts[0].name)).toBeInTheDocument();
-    });
-    
-    // フィルタリングのテスト
-    // ...
+javascriptコピー// cypress/integration/product_details.spec.js
+describe('Product details page', () => {
+  beforeEach(() => {
+    cy.visit('/product/sample-product-1');
   });
-});
-```
-
-### E2Eテスト (Cypress)
-
-```javascript
-// cypress/integration/product_page.spec.js
-describe('Product Detail Page', () => {
-  it('loads product details and related videos', () => {
-    cy.visit('/product/sample-product-id');
-    
-    // 製品タイトルが表示されることを確認
-    cy.get('h1').should('be.visible');
-    
-    // 製品画像が表示されることを確認
-    cy.get('[data-testid="product-image"]').should('be.visible');
-    
-    // レビュー動画セクションが表示されることを確認
-    cy.get('[data-testid="review-videos"]').should('be.visible');
-    
-    // 最初の動画をクリックしてモーダルが開くことをテスト
-    cy.get('[data-testid="video-card"]').first().click();
-    cy.get('[data-testid="video-modal"]').should('be.visible');
+  
+  it('displays product details', () => {
+    cy.get('h1').should('contain', 'Sample Product 1');
+    cy.get('[data-testid="product-price"]').should('exist');
+    cy.get('[data-testid="product-specs"]').should('exist');
   });
+  
+  it('allows adding product to comparison', () => {
+    cy.get('[data-testid="compare-button"]').click();
+    cy.get('[data-testid="comparison-badge"]').should('contain', '1');
+  });
+  
+  // その他のテスト
 });
-```
+開発ワークフロー
+開発環境セットアップ
+bashコピー# リポジトリのクローン
+git clone https://github.com/your-org/ai-review-website.git
 
-## デプロイフロー
+# 依存関係のインストール
+cd ai-review-website/frontend
+npm install
 
-### Vercel へのデプロイ
+# 開発サーバー起動
+npm run dev
+コーディング規約
 
-- GitHub リポジトリとの連携
-- ブランチベースのプレビューデプロイ
-- 本番環境は `main` ブランチに連動
+ESLint と Prettier を使用した一貫したコーディングスタイル
+命名規則:
 
-### 環境変数管理
+コンポーネント: PascalCase (例: ProductCard.js)
+フック: camelCase with use prefix (例: useProductData.js)
+ユーティリティ関数: camelCase (例: formatPrice.js)
 
-```
-# .env.development
-NEXT_PUBLIC_API_URL=http://localhost:5001/your-project/us-central1
-NEXT_PUBLIC_FIREBASE_CONFIG={"apiKey":"..."}
 
-# .env.production
-NEXT_PUBLIC_API_URL=https://us-central1-your-project.cloudfunctions.net
-NEXT_PUBLIC_FIREBASE_CONFIG={"apiKey":"..."}
-```
 
-### GitHub Actions ワークフロー
+ブランチ戦略とデプロイフロー
 
-```yaml
-# .github/workflows/deploy-frontend.yml
-name: Deploy Frontend
+main - 本番環境（自動デプロイ）
+development - ステージング環境（自動デプロイ）
+機能ブランチ - feature/feature-name
 
-on:
-  push:
-    branches: [main]
-    paths:
-      - 'frontend/**'
-      - '.github/workflows/deploy-frontend.yml'
+bashコピー# 新機能のブランチ作成
+git checkout -b feature/product-comparison
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-      
-      - name: Install Dependencies
-        run: cd frontend && npm ci
-      
-      - name: Run Tests
-        run: cd frontend && npm test
-      
-      - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: ./frontend
-          vercel-args: '--prod'
-```
+# 変更をコミット
+git add .
+git commit -m "Add product comparison functionality"
 
-## SEO対策
+# 開発ブランチにプッシュ
+git push origin feature/product-comparison
 
-### メタデータ最適化
+# プルリクエスト作成後、マージされるとCIパイプラインが自動実行
+開発リソース
 
-```typescript
-// components/common/SEO.tsx
-import { FC } from 'react';
-import Head from 'next/head';
-import { useRouter } from 'next/router';
-
-interface SEOProps {
-  title?: string;
-  description?: string;
-  image?: string;
-  article?: boolean;
-}
-
-export const SEO: FC<SEOProps> = ({
-  title,
-  description,
-  image,
-  article
-}) => {
-  const router = useRouter();
-  const siteTitle = 'AIレビュー動画分析サイト';
-  const defaultDescription = '製品のレビュー動画をAIが分析し、客観的な評価を提供します。';
-  const defaultImage = 'https://yourdomain.com/images/og-image.png';
-  
-  const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
-  const canURL = `https://yourdomain.com${router.asPath}`;
-  
-  return (
-    <Head>
-      <title key="title">{fullTitle}</title>
-      <meta name="description" content={description || defaultDescription} key="description" />
-      
-      {/* Open Graph */}
-      <meta property="og:title" content={fullTitle} key="og:title" />
-      <meta property="og:description" content={description || defaultDescription} key="og:description" />
-      <meta property="og:url" content={canURL} key="og:url" />
-      <meta property="og:image" content={image || defaultImage} key="og:image" />
-      <meta property="og:type" content={article ? 'article' : 'website'} key="og:type" />
-      
-      {/* Twitter Card */}
-      <meta name="twitter:card" content="summary_large_image" key="twitter:card" />
-      <meta name="twitter:title" content={fullTitle} key="twitter:title" />
-      <meta name="twitter:description" content={description || defaultDescription} key="twitter:description" />
-      <meta name="twitter:image" content={image || defaultImage} key="twitter:image" />
-      
-      <link rel="canonical" href={canURL} key="canonical" />
-    </Head>
-  );
-};
-```
-
-### 構造化データ (JSON-LD)
-
-```typescript
-// lib/schema.js
-export const generateProductSchema = (product) => {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.name,
-    image: product.images,
-    description: product.summary.text,
-    brand: {
-      '@type': 'Brand',
-      name: product.brand
-    },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: product.summary.score,
-      reviewCount: product.videos.length
-    },
-    offers: {
-      '@type': 'AggregateOffer',
-      priceCurrency: 'JPY',
-      lowPrice: Math.min(...product.prices.map(p => p.price)),
-      highPrice: Math.max(...product.prices.map(p => p.price)),
-      offerCount: product.prices.length,
-      offers: product.prices.map(price => ({
-        '@type': 'Offer',
-        price: price.price,
-        priceCurrency: price.currency,
-        availability: 'https://schema.org/InStock',
-        url: price.url,
-        seller: {
-          '@type': 'Organization',
-          name: price.store
-        }
-      }))
-    }
-  };
-};
-```
-
-### サイトマップ生成
-
-```typescript
-// pages/api/sitemap.js
-import { getAllProducts, getAllCategories } from '@/lib/db';
-
-const generateSiteMap = (products, categories) => {
-  return `<?xml version="1.0" encoding="UTF-8"?>
-   <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-     <url>
-       <loc>https://yourdomain.com</loc>
-     </url>
-     ${categories
-       .map(category => {
-         return `
-       <url>
-         <loc>https://yourdomain.com/category/${category.id}</loc>
-       </url>
-     `;
-       })
-       .join('')}
-     ${products
-       .map(product => {
-         return `
-       <url>
-         <loc>https://yourdomain.com/product/${product.id}</loc>
-         <lastmod>${new Date(product.lastUpdated).toISOString()}</lastmod>
-       </url>
-     `;
-       })
-       .join('')}
-   </urlset>
- `;
-};
-
-export default async function handler(req, res) {
-  // ファイアストアから全製品とカテゴリを取得
-  const products = await getAllProducts();
-  const categories = await getAllCategories();
-  
-  // XML形式のサイトマップを生成
+コンポーネントライブラリ: Storybook で管理
+APIドキュメント: Swagger UI で管理
+デザインシステム: Figma で共有

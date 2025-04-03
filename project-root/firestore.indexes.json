@@ -1,0 +1,18 @@
+{
+    "indexes": [
+      {
+        "collectionGroup": "products",
+        "fields": [
+          { "fieldPath": "category", "order": "ASCENDING" },
+          { "fieldPath": "price", "order": "DESCENDING" }
+        ]
+      },
+      {
+        "collectionGroup": "videos",
+        "fields": [
+          { "fieldPath": "createdAt", "order": "DESCENDING" },
+          { "fieldPath": "language", "order": "ASCENDING" }
+        ]
+      }
+    ]
+  }
